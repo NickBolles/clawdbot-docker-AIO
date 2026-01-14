@@ -32,10 +32,10 @@ jobs:
           repository: clawdbot/clawdbot
           path: clawdbot
           
-      - name: Copy Dockerfile to Clawdbot repo
+      - name: Copy Dockerfile and entrypoint to Clawdbot repo
         run: |
-          cp Dockerfile clawdbot/
-          cd clawdbot
+          cp Dockerfile entrypoint-with-wake.sh clawdbot/
+
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
