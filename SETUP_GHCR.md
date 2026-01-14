@@ -94,6 +94,7 @@ The GitHub Actions workflow includes:
 - **Layer caching**: Uses GitHub Actions cache to speed up builds
 - **Metadata extraction**: Automatically extracts and applies Docker labels
 - **PR testing**: Builds (but doesn't push) on pull requests
+- **Build summary**: Shows image digest, tags, and pull command after successful builds
 
 ## Customizing the Build
 
