@@ -91,4 +91,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
   CMD node dist/index.js health || exit 1
 
 # Start the gateway
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/index.js", "gateway"]
