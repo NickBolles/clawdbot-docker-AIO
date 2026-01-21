@@ -8,6 +8,18 @@ GATEWAY_PORT="${GATEWAY_PORT:-18789}"
 WAKE_DELAY="${WAKE_DELAY:-5}"
 WAKE_TEXT="${WAKE_TEXT:-Gateway started, checking in.}"
 
+echo "[entrypoint] Starting Chrome browser..."
+
+# Start Chrome in headless mode for browser automation
+# The gateway's browser control will attach to this instance
+google-chrome-stable --headless=new --no-sandbox --disable-gpu \
+  --remote-debugging-port=18800 \
+  --user-data-dir=/root/.clawdbot/browser/clawd/user-data \
+  about:blank > /tmp/chrome.log 2>&1 &
+CHROME_PID=$!
+
+echo "[entrypoint] Chrome started (PID $CHROME_PID)"
+
 echo "[entrypoint] Starting Clawdbot gateway..."
 
 # Start the gateway in the background
@@ -16,10 +28,11 @@ GATEWAY_PID=$!
 
 # Signal handler for graceful shutdown
 shutdown() {
-    echo "[entrypoint] Received shutdown signal, forwarding to gateway (PID $GATEWAY_PID)..."
+    echo "[entrypoint] Received shutdown signal..."
     
     # Send SIGTERM to gateway for graceful shutdown
     if kill -0 $GATEWAY_PID 2>/dev/null; then
+        echo "[entrypoint] Stopping gateway (PID $GATEWAY_PID)..."
         kill -TERM $GATEWAY_PID 2>/dev/null || true
         
         # Wait up to 30s for graceful shutdown
@@ -36,6 +49,14 @@ shutdown() {
         else
             echo "[entrypoint] Gateway stopped gracefully"
         fi
+    fi
+    
+    # Stop Chrome
+    if kill -0 $CHROME_PID 2>/dev/null; then
+        echo "[entrypoint] Stopping Chrome (PID $CHROME_PID)..."
+        kill -TERM $CHROME_PID 2>/dev/null || true
+        sleep 2
+        kill -KILL $CHROME_PID 2>/dev/null || true
     fi
     
     exit 0
