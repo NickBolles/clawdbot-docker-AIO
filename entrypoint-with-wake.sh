@@ -8,6 +8,11 @@ GATEWAY_PORT="${GATEWAY_PORT:-18789}"
 WAKE_DELAY="${WAKE_DELAY:-5}"
 WAKE_TEXT="${WAKE_TEXT:-Gateway started, checking in.}"
 
+# Clean up stale lock files from previous runs
+echo "[entrypoint] Cleaning up stale lock files..."
+find /root/.clawdbot -name "*.lock" -type f -delete 2>/dev/null || true
+echo "[entrypoint] Lock cleanup complete"
+
 echo "[entrypoint] Starting Chrome browser..."
 
 # Start Chrome in headless mode for browser automation
