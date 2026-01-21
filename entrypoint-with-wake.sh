@@ -14,6 +14,36 @@ echo "[entrypoint] Starting Clawdbot gateway..."
 node /app/dist/index.js gateway &
 GATEWAY_PID=$!
 
+# Signal handler for graceful shutdown
+shutdown() {
+    echo "[entrypoint] Received shutdown signal, forwarding to gateway (PID $GATEWAY_PID)..."
+    
+    # Send SIGTERM to gateway for graceful shutdown
+    if kill -0 $GATEWAY_PID 2>/dev/null; then
+        kill -TERM $GATEWAY_PID 2>/dev/null || true
+        
+        # Wait up to 30s for graceful shutdown
+        local timeout=30
+        while [ $timeout -gt 0 ] && kill -0 $GATEWAY_PID 2>/dev/null; do
+            sleep 1
+            timeout=$((timeout - 1))
+        done
+        
+        # Force kill if still alive
+        if kill -0 $GATEWAY_PID 2>/dev/null; then
+            echo "[entrypoint] Gateway didn't stop gracefully, sending SIGKILL..."
+            kill -KILL $GATEWAY_PID 2>/dev/null || true
+        else
+            echo "[entrypoint] Gateway stopped gracefully"
+        fi
+    fi
+    
+    exit 0
+}
+
+# Trap signals and forward to gateway
+trap shutdown SIGTERM SIGINT SIGQUIT
+
 # Function to check if gateway is ready
 wait_for_gateway() {
     local max_attempts=30
@@ -59,4 +89,9 @@ trigger_wake() {
 } &
 
 # Wait on the gateway process (keeps container running)
+# Using 'wait' allows trap handlers to run when signals arrive
 wait $GATEWAY_PID
+EXIT_CODE=$?
+
+echo "[entrypoint] Gateway exited with code $EXIT_CODE"
+exit $EXIT_CODE
