@@ -3,14 +3,14 @@ FROM node:22-bookworm
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Bun (required for Clawdbot build scripts)
+# Install Bun (required for OpenClaw build scripts)
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 
 # Enable corepack for pnpm
 RUN corepack enable
 
-# Install Google Chrome for browser automation (recommended by Clawdbot docs)
+# Install Google Chrome for browser automation (recommended by OpenClaw docs)
 # Chrome works better than snap Chromium which has AppArmor restrictions
 RUN apt-get update && \
     apt-get install -y \
@@ -59,10 +59,10 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install additional apt packages if specified
-ARG CLAWDBOT_DOCKER_APT_PACKAGES=""
-RUN if [ -n "$CLAWDBOT_DOCKER_APT_PACKAGES" ]; then \
+ARG OPENCLAW_DOCKER_APT_PACKAGES=""
+RUN if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then \
     apt-get update && \
-    apt-get install -y $CLAWDBOT_DOCKER_APT_PACKAGES && \
+    apt-get install -y $OPENCLAW_DOCKER_APT_PACKAGES && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*; \
     fi

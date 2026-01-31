@@ -24,7 +24,7 @@ The workflow will automatically create a package in GHCR on the first successful
 
 1. Go to your GitHub profile
 2. Click **Packages**
-3. Find the `clawdbot-docker` package
+3. Find the `openclaw-docker` package
 4. Click on it, then click **Package settings**
 5. Under "Danger Zone", change the visibility to **Public** (recommended for easy pulling)
 6. Optionally, link the package to this repository
@@ -40,12 +40,12 @@ YOUR_USERNAME → your-github-username
 
 For example, if your username is `johndoe`:
 ```
-ghcr.io/YOUR_USERNAME/clawdbot-docker:latest
+ghcr.io/YOUR_USERNAME/openclaw-docker:latest
 ```
 
 becomes:
 ```
-ghcr.io/johndoe/clawdbot-docker:latest
+ghcr.io/johndoe/openclaw-docker:latest
 ```
 
 ### 4. Trigger a Build
@@ -64,11 +64,11 @@ git push origin v1.0.0
 ```
 
 This will build and push an image tagged as:
-- `ghcr.io/YOUR_USERNAME/clawdbot-docker:latest`
-- `ghcr.io/YOUR_USERNAME/clawdbot-docker:1.0.0`
-- `ghcr.io/YOUR_USERNAME/clawdbot-docker:1.0`
-- `ghcr.io/YOUR_USERNAME/clawdbot-docker:1`
-- `ghcr.io/YOUR_USERNAME/clawdbot-docker:v1.0.0`
+- `ghcr.io/YOUR_USERNAME/openclaw-docker:latest`
+- `ghcr.io/YOUR_USERNAME/openclaw-docker:1.0.0`
+- `ghcr.io/YOUR_USERNAME/openclaw-docker:1.0`
+- `ghcr.io/YOUR_USERNAME/openclaw-docker:1`
+- `ghcr.io/YOUR_USERNAME/openclaw-docker:v1.0.0`
 
 ### 5. Verify Build
 
@@ -82,7 +82,7 @@ This will build and push an image tagged as:
 Once built, anyone can pull the public image:
 
 ```bash
-docker pull ghcr.io/YOUR_USERNAME/clawdbot-docker:latest
+docker pull ghcr.io/YOUR_USERNAME/openclaw-docker:latest
 ```
 
 ## Workflow Features
@@ -104,7 +104,7 @@ Edit `.github/workflows/docker-build.yml` and modify the `build-args` section:
 
 ```yaml
 build-args: |
-  CLAWDBOT_DOCKER_APT_PACKAGES=ffmpeg build-essential git curl python3
+  OPENCLAW_DOCKER_APT_PACKAGES=ffmpeg build-essential git curl python3
 ```
 
 ### Building for Multiple Platforms
@@ -126,7 +126,7 @@ To build for ARM64 (e.g., Raspberry Pi), modify the workflow:
 ### Build Fails
 
 - Check the Actions log for specific errors
-- Ensure the Clawdbot repository is accessible
+- Ensure the OpenClaw repository is accessible
 - Verify the Dockerfile syntax is correct
 
 ### Permission Denied

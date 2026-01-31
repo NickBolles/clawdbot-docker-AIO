@@ -1,12 +1,12 @@
-# Clawdbot Gateway - Docker (Unraid)
+# OpenClaw Gateway - Docker (Unraid)
 
-An all-in-one Docker image for running a Clawdbot gateway. This is designed for Unraid hosts that don't support docker-compose, based on the [official Clawdbot Docker setup](https://docs.clawd.bot/install/docker).
+An all-in-one Docker image for running an OpenClaw gateway. This is designed for Unraid hosts that don't support docker-compose, based on the [official OpenClaw Docker setup](https://docs.openclaw.ai/install/docker).
 
-[![Build and Push Docker Image](https://github.com/YOUR_USERNAME/clawdbot-docker/actions/workflows/docker-build.yml/badge.svg)](https://github.com/YOUR_USERNAME/clawdbot-docker/actions/workflows/docker-build.yml)
+[![Build and Push Docker Image](https://github.com/YOUR_USERNAME/openclaw-docker/actions/workflows/docker-build.yml/badge.svg)](https://github.com/YOUR_USERNAME/openclaw-docker/actions/workflows/docker-build.yml)
 
 ## Overview
 
-Clawdbot is an AI agent platform that connects Claude (and other LLMs) to messaging platforms like WhatsApp, Telegram, Discord, and more. This Docker image provides a containerized gateway that you can run on Unraid or any Docker host.
+OpenClaw is a personal AI assistant platform that connects Claude (and other LLMs) to messaging platforms like WhatsApp, Telegram, Discord, and more. This Docker image provides a containerized gateway that you can run on Unraid or any Docker host.
 
 ## Prerequisites
 
@@ -20,25 +20,25 @@ Clawdbot is an AI agent platform that connects Claude (and other LLMs) to messag
 Pull the latest pre-built image from GitHub Container Registry:
 
 ```bash
-docker pull ghcr.io/YOUR_USERNAME/clawdbot-docker:latest
+docker pull ghcr.io/YOUR_USERNAME/openclaw-docker:latest
 ```
 
-Then skip to step 4 below and use `ghcr.io/YOUR_USERNAME/clawdbot-docker:latest` as the image name.
+Then skip to step 4 below and use `ghcr.io/YOUR_USERNAME/openclaw-docker:latest` as the image name.
 
 ### Option 2: Build Locally
 
-### 1. Clone Clawdbot Repository
+### 1. Clone OpenClaw Repository
 
-First, clone the official Clawdbot repository:
+First, clone the official OpenClaw repository:
 
 ```bash
-git clone https://github.com/clawdbot/clawdbot.git
-cd clawdbot
+git clone https://github.com/openclaw/openclaw.git
+cd openclaw
 ```
 
 ### 2. Copy This Dockerfile
 
-Copy this `Dockerfile` into the clawdbot repository root.
+Copy this `Dockerfile` into the openclaw repository root.
 
 ### 3. Build the Image
 
@@ -46,21 +46,21 @@ Build with optional apt packages for plugins:
 
 ```bash
 docker build \
-  --build-arg CLAWDBOT_DOCKER_APT_PACKAGES="ffmpeg build-essential" \
-  -t clawdbot:latest \
+  --build-arg OPENCLAW_DOCKER_APT_PACKAGES="ffmpeg build-essential" \
+  -t openclaw:latest \
   .
 ```
 
 Or build without extra packages:
 
 ```bash
-docker build -t clawdbot:latest .
+docker build -t openclaw:latest .
 ```
 
 ### 4. Create Configuration Directory
 
 ```bash
-mkdir -p ~/.clawdbot
+mkdir -p ~/.openclaw
 ```
 
 ### 5. Run Initial Setup (Onboarding)
@@ -69,9 +69,9 @@ Run the onboarding wizard to create your initial configuration:
 
 ```bash
 docker run -it --rm \
-  -v ~/.clawdbot:/root/.clawdbot \
-  -v ~/clawd:/root/clawd \
-  clawdbot:latest \
+  -v ~/.openclaw:/root/.openclaw \
+  -v ~/.openclaw/workspace:/root/.openclaw/workspace \
+  openclaw:latest \
   node dist/index.js onboard
 ```
 
@@ -84,13 +84,13 @@ This will guide you through:
 
 ```bash
 docker run -d \
-  --name clawdbot-gateway \
+  --name openclaw-gateway \
   -p 18789:18789 \
   -p 18790:18790 \
-  -v ~/.clawdbot:/root/.clawdbot \
-  -v ~/clawd:/root/clawd \
+  -v ~/.openclaw:/root/.openclaw \
+  -v ~/.openclaw/workspace:/root/.openclaw/workspace \
   --restart unless-stopped \
-  clawdbot:latest
+  openclaw:latest
 ```
 
 The gateway will now be running with:
@@ -116,15 +116,15 @@ You can control the startup behavior with environment variables:
 
 ```bash
 docker run -d \
-  --name clawdbot-gateway \
+  --name openclaw-gateway \
   -p 18789:18789 \
   -p 18790:18790 \
-  -v ~/.clawdbot:/root/.clawdbot \
-  -v ~/clawd:/root/clawd \
+  -v ~/.openclaw:/root/.openclaw \
+  -v ~/.openclaw/workspace:/root/.openclaw/workspace \
   -e WAKE_DELAY=10 \
   -e WAKE_TEXT="Custom startup message" \
   --restart unless-stopped \
-  clawdbot:latest
+  openclaw:latest
 ```
 
 **Available environment variables:**
@@ -138,14 +138,14 @@ If you want to use the standard gateway startup without the wake, override the c
 
 ```bash
 docker run -d \
-  --name clawdbot-gateway \
+  --name openclaw-gateway \
   -p 18789:18789 \
   -p 18790:18790 \
-  -v ~/.clawdbot:/root/.clawdbot \
-  -v ~/clawd:/root/clawd \
+  -v ~/.openclaw:/root/.openclaw \
+  -v ~/.openclaw/workspace:/root/.openclaw/workspace \
   --restart unless-stopped \
   --entrypoint node \
-  clawdbot:latest \
+  openclaw:latest \
   dist/index.js gateway
 ```
 
@@ -156,8 +156,8 @@ docker run -d \
 Add a new container in Unraid with these settings:
 
 **Basic Settings:**
-- **Name**: `clawdbot-gateway`
-- **Repository**: `ghcr.io/YOUR_USERNAME/clawdbot-docker:latest` (or `clawdbot:latest` if built locally)
+- **Name**: `openclaw-gateway`
+- **Repository**: `ghcr.io/YOUR_USERNAME/openclaw-docker:latest` (or `openclaw:latest` if built locally)
 - **Network Type**: `Bridge`
 
 **Port Mappings:**
@@ -165,8 +165,8 @@ Add a new container in Unraid with these settings:
 - Container Port `18790` → Host Port `18790` (TCP) - WebChat
 
 **Volume Mappings:**
-- Container Path: `/root/.clawdbot` → Host Path: `/mnt/user/appdata/clawdbot/config`
-- Container Path: `/root/clawd` → Host Path: `/mnt/user/appdata/clawdbot/workspace`
+- Container Path: `/root/.openclaw` → Host Path: `/mnt/user/appdata/openclaw/config`
+- Container Path: `/root/.openclaw/workspace` → Host Path: `/mnt/user/appdata/openclaw/workspace`
 
 **Advanced:**
 - Extra Parameters: `--restart unless-stopped`
@@ -177,9 +177,9 @@ Before starting the container, run the onboarding wizard:
 
 ```bash
 docker run -it --rm \
-  -v /mnt/user/appdata/clawdbot/config:/root/.clawdbot \
-  -v /mnt/user/appdata/clawdbot/workspace:/root/clawd \
-  ghcr.io/YOUR_USERNAME/clawdbot-docker:latest \
+  -v /mnt/user/appdata/openclaw/config:/root/.openclaw \
+  -v /mnt/user/appdata/openclaw/workspace:/root/.openclaw/workspace \
+  ghcr.io/YOUR_USERNAME/openclaw-docker:latest \
   node dist/index.js onboard
 ```
 
@@ -189,8 +189,8 @@ Then start the container normally through the Unraid UI.
 
 ### Directory Structure
 
-- `~/.clawdbot/` - Configuration files, agent configs, sessions
-- `~/clawd/` - Agent workspace for file operations
+- `~/.openclaw/` - Configuration files, agent configs, sessions
+- `~/.openclaw/workspace/` - Agent workspace for file operations
 
 ### Adding Channels
 
@@ -198,20 +198,20 @@ To add messaging channels (WhatsApp, Telegram, Discord), use the CLI:
 
 **WhatsApp (QR Code):**
 ```bash
-docker exec -it clawdbot-gateway node dist/index.js channels login
+docker exec -it openclaw-gateway node dist/index.js channels login
 ```
 
 **Telegram (Bot Token):**
 ```bash
-docker exec -it clawdbot-gateway node dist/index.js channels add --channel telegram --token "YOUR_BOT_TOKEN"
+docker exec -it openclaw-gateway node dist/index.js channels add --channel telegram --token "YOUR_BOT_TOKEN"
 ```
 
 **Discord (Bot Token):**
 ```bash
-docker exec -it clawdbot-gateway node dist/index.js channels add --channel discord --token "YOUR_BOT_TOKEN"
+docker exec -it openclaw-gateway node dist/index.js channels add --channel discord --token "YOUR_BOT_TOKEN"
 ```
 
-See [Clawdbot Channels Documentation](https://docs.clawd.bot/channels) for more details.
+See [OpenClaw Channels Documentation](https://docs.openclaw.ai/channels) for more details.
 
 ### Environment Variables
 
@@ -219,15 +219,15 @@ You can pass additional configuration via environment variables:
 
 ```bash
 docker run -d \
-  --name clawdbot-gateway \
+  --name openclaw-gateway \
   -p 18789:18789 \
   -p 18790:18790 \
   -e NODE_ENV=production \
   -e ANTHROPIC_API_KEY=your-api-key \
-  -v ~/.clawdbot:/root/.clawdbot \
-  -v ~/clawd:/root/clawd \
+  -v ~/.openclaw:/root/.openclaw \
+  -v ~/.openclaw/workspace:/root/.openclaw/workspace \
   --restart unless-stopped \
-  clawdbot:latest
+  openclaw:latest
 ```
 
 ## Installing Additional Packages
@@ -236,8 +236,8 @@ The Dockerfile supports installing apt packages during build for plugin compatib
 
 ```bash
 docker build \
-  --build-arg CLAWDBOT_DOCKER_APT_PACKAGES="ffmpeg imagemagick git curl jq" \
-  -t clawdbot:latest \
+  --build-arg OPENCLAW_DOCKER_APT_PACKAGES="ffmpeg imagemagick git curl jq" \
+  -t openclaw:latest \
   .
 ```
 
@@ -253,7 +253,7 @@ Common packages you might need:
 Check if the gateway is healthy:
 
 ```bash
-docker exec clawdbot-gateway node dist/index.js health
+docker exec openclaw-gateway node dist/index.js health
 ```
 
 ## Updating
@@ -263,9 +263,9 @@ docker exec clawdbot-gateway node dist/index.js health
 If you're using the pre-built image from GHCR, simply pull the latest version:
 
 ```bash
-docker pull ghcr.io/YOUR_USERNAME/clawdbot-docker:latest
-docker stop clawdbot-gateway
-docker rm clawdbot-gateway
+docker pull ghcr.io/YOUR_USERNAME/openclaw-docker:latest
+docker stop openclaw-gateway
+docker rm openclaw-gateway
 ```
 
 Then start a new container with the same volume mounts. Images are automatically built and pushed on every commit to the main branch.
@@ -276,19 +276,19 @@ To update when building locally:
 
 1. Pull the latest changes:
 ```bash
-cd clawdbot
+cd openclaw
 git pull origin main
 ```
 
 2. Rebuild the image:
 ```bash
-docker build -t clawdbot:latest .
+docker build -t openclaw:latest .
 ```
 
 3. Stop and remove the old container:
 ```bash
-docker stop clawdbot-gateway
-docker rm clawdbot-gateway
+docker stop openclaw-gateway
+docker rm openclaw-gateway
 ```
 
 4. Start a new container with the same volume mounts
@@ -300,7 +300,7 @@ This repository uses GitHub Actions to automatically build and push Docker image
 - Every version tag (e.g., `v1.0.0`)
 - Pull requests (for testing)
 
-Images are available at: `ghcr.io/YOUR_USERNAME/clawdbot-docker`
+Images are available at: `ghcr.io/YOUR_USERNAME/openclaw-docker`
 
 Available tags:
 - `latest` - Latest build from main branch
@@ -310,23 +310,23 @@ Available tags:
 
 To use a specific version:
 ```bash
-docker pull ghcr.io/YOUR_USERNAME/clawdbot-docker:v1.0.0
+docker pull ghcr.io/YOUR_USERNAME/openclaw-docker:v1.0.0
 ```
 
 ## Troubleshooting
 
 ### View Logs
 ```bash
-docker logs -f clawdbot-gateway
+docker logs -f openclaw-gateway
 ```
 
 ### Access Container Shell
 ```bash
-docker exec -it clawdbot-gateway /bin/bash
+docker exec -it openclaw-gateway /bin/bash
 ```
 
 ### Configuration Issues
-Check your configuration files in `~/.clawdbot/config.js` or `~/.clawdbot/config.json5`
+Check your configuration files in `~/.openclaw/openclaw.json`
 
 ### Port Conflicts
 If ports 18789 or 18790 are already in use, change the host port:
@@ -336,11 +336,11 @@ If ports 18789 or 18790 are already in use, change the host port:
 
 ## Documentation
 
-- [Official Clawdbot Docs](https://docs.clawd.bot/)
-- [Docker Installation Guide](https://docs.clawd.bot/install/docker)
-- [Gateway Configuration](https://docs.clawd.bot/gateway/configuration)
-- [Channels Setup](https://docs.clawd.bot/channels)
+- [Official OpenClaw Docs](https://docs.openclaw.ai/)
+- [Docker Installation Guide](https://docs.openclaw.ai/install/docker)
+- [Gateway Configuration](https://docs.openclaw.ai/gateway/configuration)
+- [Channels Setup](https://docs.openclaw.ai/channels)
 
 ## License
 
-Clawdbot is open source. Check the [official repository](https://github.com/clawdbot/clawdbot) for license details.
+OpenClaw is open source. Check the [official repository](https://github.com/openclaw/openclaw) for license details.

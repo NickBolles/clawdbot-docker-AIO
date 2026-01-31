@@ -1,5 +1,5 @@
 #!/bin/bash
-# Clawdbot entrypoint wrapper that triggers a heartbeat wake on startup
+# OpenClaw entrypoint wrapper that triggers a heartbeat wake on startup
 # Usage: Replace CMD in docker-compose with this script
 
 set -e
@@ -8,19 +8,24 @@ GATEWAY_PORT="${GATEWAY_PORT:-18789}"
 WAKE_DELAY="${WAKE_DELAY:-5}"
 WAKE_TEXT="${WAKE_TEXT:-Gateway started, checking in.}"
 
+# Clean up stale lock files from previous runs
+echo "[entrypoint] Cleaning up stale lock files..."
+find /root/.openclaw -name "*.lock" -type f -delete 2>/dev/null || true
+echo "[entrypoint] Lock cleanup complete"
+
 echo "[entrypoint] Starting Chrome browser..."
 
 # Start Chrome in headless mode for browser automation
 # The gateway's browser control will attach to this instance
 google-chrome-stable --headless=new --no-sandbox --disable-gpu \
   --remote-debugging-port=18800 \
-  --user-data-dir=/root/.clawdbot/browser/clawd/user-data \
+  --user-data-dir=/root/.openclaw/browser/clawd/user-data \
   about:blank > /tmp/chrome.log 2>&1 &
 CHROME_PID=$!
 
 echo "[entrypoint] Chrome started (PID $CHROME_PID)"
 
-echo "[entrypoint] Starting Clawdbot gateway..."
+echo "[entrypoint] Starting OpenClaw gateway..."
 
 # Start the gateway in the background
 node /app/dist/index.js gateway &
