@@ -16,6 +16,8 @@ RUN apt-get update && \
     apt-get install -y \
     wget \
     gnupg \
+    curl \
+    git \
     # Chrome/Chromium dependencies
     libnss3 \
     libnspr4 \
@@ -41,6 +43,10 @@ RUN apt-get update && \
     fonts-noto-color-emoji \
     # Additional useful tools
     ca-certificates \
+    sudo \
+    procps \
+    htop \
+    vim \
     && wget -q -O /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
     && apt-get install -y /tmp/google-chrome-stable_current_amd64.deb \
     && rm /tmp/google-chrome-stable_current_amd64.deb \
@@ -57,6 +63,17 @@ RUN apt-get update && \
     apt-get install -y gh && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Install code-server
+ARG CODE_SERVER_VERSION=4.96.4
+RUN curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=${CODE_SERVER_VERSION}
+
+# Install useful VS Code extensions for code-server
+RUN code-server --install-extension ms-python.python \
+    && code-server --install-extension dbaeumer.vscode-eslint \
+    && code-server --install-extension esbenp.prettier-vscode \
+    && code-server --install-extension eamodio.gitlens \
+    || true
 
 # Install additional apt packages if specified
 ARG CLAWDBOT_DOCKER_APT_PACKAGES=""
@@ -91,10 +108,21 @@ ENV NODE_ENV=production
 COPY entrypoint-with-wake.sh /entrypoint-with-wake.sh
 RUN chmod +x /entrypoint-with-wake.sh
 
+# code-server config directory
+RUN mkdir -p /root/.config/code-server
+
 # Expose ports
 # 18789 - Control UI / Dashboard
 # 18790 - WebChat (optional)
-EXPOSE 18789 18790
+# 8443  - code-server (VS Code in browser)
+EXPOSE 18789 18790 8443
+
+# Environment variables for code-server
+ENV CODE_SERVER_ENABLED=true
+ENV CODE_SERVER_PORT=8443
+ENV CODE_SERVER_PASSWORD=""
+ENV CODE_SERVER_AUTH=password
+ENV CODE_SERVER_BIND_ADDR=0.0.0.0:8443
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \

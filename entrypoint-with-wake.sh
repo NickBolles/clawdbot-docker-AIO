@@ -1,5 +1,6 @@
 #!/bin/bash
 # Clawdbot entrypoint wrapper that triggers a heartbeat wake on startup
+# and optionally starts code-server for VS Code in browser
 # Usage: Replace CMD in docker-compose with this script
 
 set -e
@@ -7,6 +8,14 @@ set -e
 GATEWAY_PORT="${GATEWAY_PORT:-18789}"
 WAKE_DELAY="${WAKE_DELAY:-5}"
 WAKE_TEXT="${WAKE_TEXT:-Gateway started, checking in.}"
+
+# code-server settings
+CODE_SERVER_ENABLED="${CODE_SERVER_ENABLED:-true}"
+CODE_SERVER_PORT="${CODE_SERVER_PORT:-8443}"
+CODE_SERVER_PASSWORD="${CODE_SERVER_PASSWORD:-}"
+CODE_SERVER_AUTH="${CODE_SERVER_AUTH:-password}"
+CODE_SERVER_BIND_ADDR="${CODE_SERVER_BIND_ADDR:-0.0.0.0:$CODE_SERVER_PORT}"
+CODE_SERVER_WORKSPACE="${CODE_SERVER_WORKSPACE:-/root/clawd}"
 
 # Clean up stale lock files from previous runs
 echo "[entrypoint] Cleaning up stale lock files..."
@@ -24,6 +33,31 @@ google-chrome-stable --headless=new --no-sandbox --disable-gpu \
 CHROME_PID=$!
 
 echo "[entrypoint] Chrome started (PID $CHROME_PID)"
+
+# Start code-server if enabled
+CODE_SERVER_PID=""
+if [ "$CODE_SERVER_ENABLED" = "true" ]; then
+    echo "[entrypoint] Starting code-server on port $CODE_SERVER_PORT..."
+    
+    # Create code-server config
+    mkdir -p /root/.config/code-server
+    cat > /root/.config/code-server/config.yaml << EOF
+bind-addr: $CODE_SERVER_BIND_ADDR
+auth: $CODE_SERVER_AUTH
+password: ${CODE_SERVER_PASSWORD:-$(openssl rand -base64 24)}
+cert: false
+EOF
+    
+    # If no password was set, show the generated one
+    if [ -z "$CODE_SERVER_PASSWORD" ]; then
+        echo "[entrypoint] code-server password: $(grep password /root/.config/code-server/config.yaml | cut -d' ' -f2)"
+    fi
+    
+    # Start code-server
+    code-server "$CODE_SERVER_WORKSPACE" > /tmp/code-server.log 2>&1 &
+    CODE_SERVER_PID=$!
+    echo "[entrypoint] code-server started (PID $CODE_SERVER_PID)"
+fi
 
 echo "[entrypoint] Starting Clawdbot gateway..."
 
@@ -54,6 +88,14 @@ shutdown() {
         else
             echo "[entrypoint] Gateway stopped gracefully"
         fi
+    fi
+    
+    # Stop code-server
+    if [ -n "$CODE_SERVER_PID" ] && kill -0 $CODE_SERVER_PID 2>/dev/null; then
+        echo "[entrypoint] Stopping code-server (PID $CODE_SERVER_PID)..."
+        kill -TERM $CODE_SERVER_PID 2>/dev/null || true
+        sleep 2
+        kill -KILL $CODE_SERVER_PID 2>/dev/null || true
     fi
     
     # Stop Chrome
@@ -113,6 +155,19 @@ trigger_wake() {
 {
     wait_for_gateway && trigger_wake
 } &
+
+# Print startup summary
+echo ""
+echo "=========================================="
+echo "  Clawdbot Gateway Started"
+echo "=========================================="
+echo "  Gateway UI:     http://localhost:$GATEWAY_PORT"
+echo "  WebChat:        http://localhost:18790"
+if [ "$CODE_SERVER_ENABLED" = "true" ]; then
+echo "  code-server:    http://localhost:$CODE_SERVER_PORT"
+fi
+echo "=========================================="
+echo ""
 
 # Wait on the gateway process (keeps container running)
 # Using 'wait' allows trap handlers to run when signals arrive
