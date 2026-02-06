@@ -21,7 +21,7 @@ echo "[entrypoint] Starting Chrome..."
 google-chrome-stable --headless=new --no-sandbox --disable-gpu \
   --remote-debugging-port=18800 \
   --user-data-dir=/home/coder/.clawdbot/browser/clawd/user-data \
-  about:blank > /tmp/chrome.log 2>&1 &
+  about:blank 2>&1 | sed 's/^/[chrome] /' &
 CHROME_PID=$!
 echo "[entrypoint] Chrome started (PID $CHROME_PID)"
 
@@ -32,14 +32,14 @@ if [ "$CODE_SERVER_ENABLED" = "true" ]; then
     
     # code-server will use its own config or env vars
     # PASSWORD env var is picked up automatically by code-server
-    code-server --bind-addr "0.0.0.0:$CODE_SERVER_PORT" "$CLAWDBOT_WORKSPACE" > /tmp/code-server.log 2>&1 &
+    code-server --bind-addr "0.0.0.0:$CODE_SERVER_PORT" "$CLAWDBOT_WORKSPACE" 2>&1 | sed 's/^/[code-server] /' &
     CODE_SERVER_PID=$!
     echo "[entrypoint] code-server started (PID $CODE_SERVER_PID)"
 fi
 
 # Start Clawdbot gateway
 echo "[entrypoint] Starting Clawdbot gateway..."
-clawdbot gateway &
+clawdbot gateway 2>&1 | sed 's/^/[gateway] /' &
 GATEWAY_PID=$!
 
 # Signal handler
