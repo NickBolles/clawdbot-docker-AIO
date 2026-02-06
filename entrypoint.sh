@@ -16,6 +16,12 @@ CLAWDBOT_WORKSPACE="${CLAWDBOT_WORKSPACE:-/home/coder/clawd}"
 echo "[entrypoint] Cleaning up stale lock files..."
 find /home/coder/.clawdbot -name "*.lock" -type f -delete 2>/dev/null || true
 
+# Chrome leaves SingletonLock (and siblings) in user-data; *.lock doesn't match
+CHROME_UD="/home/coder/.clawdbot/browser/clawd/user-data"
+for f in SingletonLock SingletonCookie SingletonSocket; do
+  rm -f "$CHROME_UD/$f" 2>/dev/null || true
+done
+
 # Start Chrome in headless mode for browser automation
 echo "[entrypoint] Starting Chrome..."
 google-chrome-stable --headless=new --no-sandbox --disable-gpu \
