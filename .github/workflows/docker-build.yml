@@ -9,6 +9,9 @@ on:
   pull_request:
     branches:
       - main
+  schedule:
+    # Rebuild daily at 6am UTC to pick up new clawdbot releases
+    - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
       clawdbot_version:
