@@ -1,4 +1,4 @@
-# Clawdbot + code-server AIO image
+# OpenClaw + code-server AIO image
 FROM codercom/code-server:latest
 
 USER root
@@ -67,23 +67,26 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 ENV CHROME_BIN=/usr/bin/google-chrome-stable
 ENV CHROME_PATH=/usr/bin/google-chrome-stable
 
-# Install Clawdbot globally via npm
-ARG CLAWDBOT_VERSION=latest
-RUN npm install -g clawdbot@${CLAWDBOT_VERSION}
+# Install OpenClaw globally via npm
+ARG OPENCLAW_VERSION=latest
+RUN npm install -g openclaw@${OPENCLAW_VERSION}
+
+# Alias clawdbot -> openclaw for backwards compatibility
+RUN ln -s "$(which openclaw)" /usr/local/bin/clawdbot
 
 # Additional apt packages (optional)
-ARG CLAWDBOT_DOCKER_APT_PACKAGES=""
-RUN if [ -n "$CLAWDBOT_DOCKER_APT_PACKAGES" ]; then \
+ARG OPENCLAW_DOCKER_APT_PACKAGES=""
+RUN if [ -n "$OPENCLAW_DOCKER_APT_PACKAGES" ]; then \
     apt-get update && \
-    apt-get install -y $CLAWDBOT_DOCKER_APT_PACKAGES && \
+    apt-get install -y $OPENCLAW_DOCKER_APT_PACKAGES && \
     rm -rf /var/lib/apt/lists/*; \
     fi
 
-# Clawdbot directories
-ENV CLAWDBOT_STATE_DIR=/home/coder/.clawdbot
-ENV CLAWDBOT_WORKSPACE=/home/coder/clawd
-RUN mkdir -p "${CLAWDBOT_STATE_DIR}" "${CLAWDBOT_WORKSPACE}" \
-    && chown -R coder:coder "${CLAWDBOT_STATE_DIR}" "${CLAWDBOT_WORKSPACE}"
+# OpenClaw directories
+ENV OPENCLAW_STATE_DIR=/home/coder/.openclaw
+ENV OPENCLAW_WORKSPACE=/home/coder/clawd
+RUN mkdir -p "${OPENCLAW_STATE_DIR}" "${OPENCLAW_WORKSPACE}" \
+    && chown -R coder:coder "${OPENCLAW_STATE_DIR}" "${OPENCLAW_WORKSPACE}"
 
 # VS Code extensions
 RUN code-server --install-extension ms-python.python || true \
@@ -96,9 +99,9 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Verify
-RUN gh --version && node -v && npm -v && clawdbot --help && google-chrome-stable --version
+RUN gh --version && node -v && npm -v && openclaw --help && google-chrome-stable --version
 
-# Ports: 18789=Dashboard, 18790=WebChat, 8443=code-server
+# Ports: 18789=OpenClaw Dashboard, 18790=WebChat, 8443=code-server
 EXPOSE 18789 18790 8443
 
 ENV NODE_ENV=production
@@ -108,6 +111,6 @@ ENV GATEWAY_PORT=18789
 USER coder
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD clawdbot health || exit 1
+  CMD openclaw health || exit 1
 
 ENTRYPOINT ["/entrypoint.sh"]
