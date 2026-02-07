@@ -10,12 +10,12 @@ on:
     branches:
       - main
   schedule:
-    # Rebuild weekly on Sundays at 6am UTC to pick up new clawdbot releases
+    # Rebuild weekly on Sundays at 6am UTC to pick up new openclaw releases
     - cron: '0 6 * * 0'
   workflow_dispatch:
     inputs:
-      clawdbot_version:
-        description: 'Clawdbot npm version (e.g., latest, 1.2.3)'
+      openclaw_version:
+        description: 'OpenClaw npm version (e.g., latest, 1.2.3)'
         required: false
         default: 'latest'
 
@@ -70,15 +70,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            CLAWDBOT_VERSION=${{ github.event.inputs.clawdbot_version || 'latest' }}
-            CLAWDBOT_DOCKER_APT_PACKAGES=ffmpeg
+            OPENCLAW_VERSION=${{ github.event.inputs.openclaw_version || 'latest' }}
+            OPENCLAW_DOCKER_APT_PACKAGES=ffmpeg
 
       - name: Build summary
         if: github.event_name != 'pull_request'
         run: |
           echo "## 🐳 Docker Image Built" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Clawdbot version:** \`${{ github.event.inputs.clawdbot_version || 'latest' }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**OpenClaw version:** \`${{ github.event.inputs.openclaw_version || 'latest' }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Pull" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
@@ -90,7 +90,7 @@ jobs:
           echo "docker run -d \\" >> $GITHUB_STEP_SUMMARY
           echo "  -p 18789:18789 -p 8443:8443 \\" >> $GITHUB_STEP_SUMMARY
           echo "  -e PASSWORD=your-password \\" >> $GITHUB_STEP_SUMMARY
-          echo "  -v ~/.clawdbot:/home/coder/.clawdbot \\" >> $GITHUB_STEP_SUMMARY
+          echo "  -v ~/.openclaw:/home/coder/.openclaw \\" >> $GITHUB_STEP_SUMMARY
           echo "  -v ~/clawd:/home/coder/clawd \\" >> $GITHUB_STEP_SUMMARY
           echo "  ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

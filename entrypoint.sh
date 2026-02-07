@@ -1,6 +1,6 @@
 #!/bin/bash
-# Clawdbot + code-server entrypoint
-# Starts code-server (optional) and Clawdbot gateway
+# OpenClaw + code-server entrypoint
+# Starts code-server (optional) and OpenClaw gateway
 
 set -e
 
@@ -10,14 +10,14 @@ WAKE_DELAY="${WAKE_DELAY:-5}"
 WAKE_TEXT="${WAKE_TEXT:-Gateway started, checking in.}"
 CODE_SERVER_ENABLED="${CODE_SERVER_ENABLED:-true}"
 CODE_SERVER_PORT="${CODE_SERVER_PORT:-8443}"
-CLAWDBOT_WORKSPACE="${CLAWDBOT_WORKSPACE:-/home/coder/clawd}"
+OPENCLAW_WORKSPACE="${OPENCLAW_WORKSPACE:-/home/coder/clawd}"
 
 # Clean up stale lock files
 echo "[entrypoint] Cleaning up stale lock files..."
-find /home/coder/.clawdbot -name "*.lock" -type f -delete 2>/dev/null || true
+find /home/coder/.openclaw -name "*.lock" -type f -delete 2>/dev/null || true
 
 # Chrome leaves SingletonLock (and siblings) in user-data; *.lock doesn't match
-CHROME_UD="/home/coder/.clawdbot/browser/clawd/user-data"
+CHROME_UD="/home/coder/.openclaw/browser/clawd/user-data"
 for f in SingletonLock SingletonCookie SingletonSocket; do
   rm -f "$CHROME_UD/$f" 2>/dev/null || true
 done
@@ -26,7 +26,7 @@ done
 echo "[entrypoint] Starting Chrome..."
 google-chrome-stable --headless=new --no-sandbox --disable-gpu \
   --remote-debugging-port=18800 \
-  --user-data-dir=/home/coder/.clawdbot/browser/clawd/user-data \
+  --user-data-dir=/home/coder/.openclaw/browser/clawd/user-data \
   about:blank 2>&1 | sed 's/^/[chrome] /' &
 CHROME_PID=$!
 echo "[entrypoint] Chrome started (PID $CHROME_PID)"
@@ -35,33 +35,33 @@ echo "[entrypoint] Chrome started (PID $CHROME_PID)"
 CODE_SERVER_PID=""
 if [ "$CODE_SERVER_ENABLED" = "true" ]; then
     echo "[entrypoint] Starting code-server on port $CODE_SERVER_PORT..."
-    
+
     # code-server will use its own config or env vars
     # PASSWORD env var is picked up automatically by code-server
-    code-server --bind-addr "0.0.0.0:$CODE_SERVER_PORT" "$CLAWDBOT_WORKSPACE" 2>&1 | sed 's/^/[code-server] /' &
+    code-server --bind-addr "0.0.0.0:$CODE_SERVER_PORT" "$OPENCLAW_WORKSPACE" 2>&1 | sed 's/^/[code-server] /' &
     CODE_SERVER_PID=$!
     echo "[entrypoint] code-server started (PID $CODE_SERVER_PID)"
 fi
 
-# Start Clawdbot gateway
-echo "[entrypoint] Starting Clawdbot gateway..."
-clawdbot gateway 2>&1 | sed 's/^/[gateway] /' &
+# Start OpenClaw gateway
+echo "[entrypoint] Starting OpenClaw gateway..."
+openclaw gateway 2>&1 | sed 's/^/[gateway] /' &
 GATEWAY_PID=$!
 
 # Signal handler
 shutdown() {
     echo "[entrypoint] Shutting down..."
-    
+
     [ -n "$GATEWAY_PID" ] && kill -TERM $GATEWAY_PID 2>/dev/null || true
     [ -n "$CODE_SERVER_PID" ] && kill -TERM $CODE_SERVER_PID 2>/dev/null || true
     [ -n "$CHROME_PID" ] && kill -TERM $CHROME_PID 2>/dev/null || true
-    
+
     sleep 2
-    
+
     [ -n "$GATEWAY_PID" ] && kill -KILL $GATEWAY_PID 2>/dev/null || true
     [ -n "$CODE_SERVER_PID" ] && kill -KILL $CODE_SERVER_PID 2>/dev/null || true
     [ -n "$CHROME_PID" ] && kill -KILL $CHROME_PID 2>/dev/null || true
-    
+
     exit 0
 }
 trap shutdown SIGTERM SIGINT SIGQUIT
@@ -70,7 +70,7 @@ trap shutdown SIGTERM SIGINT SIGQUIT
 wait_for_gateway() {
     local max_attempts=60
     local attempt=0
-    
+
     echo "[entrypoint] Waiting for gateway..."
     while [ $attempt -lt $max_attempts ]; do
         if curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:$GATEWAY_PORT/health" 2>/dev/null | grep -q "200"; then
@@ -92,7 +92,7 @@ wait_for_gateway() {
 trigger_wake() {
     sleep "$WAKE_DELAY"
     echo "[entrypoint] Triggering wake..."
-    clawdbot wake --text "$WAKE_TEXT" --mode now --timeout 30000 || echo "[entrypoint] Wake failed (non-fatal)"
+    openclaw wake --text "$WAKE_TEXT" --mode now --timeout 30000 || echo "[entrypoint] Wake failed (non-fatal)"
 }
 
 # Background: wait for gateway then wake
@@ -101,7 +101,7 @@ trigger_wake() {
 # Startup info
 echo ""
 echo "=========================================="
-echo "  Clawdbot + code-server"
+echo "  OpenClaw + code-server"
 echo "=========================================="
 echo "  Dashboard:    http://localhost:$GATEWAY_PORT"
 echo "  WebChat:      http://localhost:18790"

@@ -104,7 +104,7 @@ Edit `.github/workflows/docker-build.yml` and modify the `build-args` section:
 
 ```yaml
 build-args: |
-  CLAWDBOT_DOCKER_APT_PACKAGES=ffmpeg build-essential git curl python3
+  OPENCLAW_DOCKER_APT_PACKAGES=ffmpeg build-essential git curl python3
 ```
 
 ### Building for Multiple Platforms
@@ -126,7 +126,7 @@ To build for ARM64 (e.g., Raspberry Pi), modify the workflow:
 ### Build Fails
 
 - Check the Actions log for specific errors
-- Ensure the Clawdbot repository is accessible
+- Ensure the OpenClaw repository is accessible
 - Verify the Dockerfile syntax is correct
 
 ### Permission Denied
