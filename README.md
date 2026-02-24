@@ -32,6 +32,9 @@ git clone https://github.com/openclaw/openclaw.git
 cd openclaw
 # Copy Dockerfile and entrypoint.sh to this directory
 docker build -t openclaw:latest .
+
+# Force a fresh OpenClaw install (bust Docker layer cache):
+docker build --build-arg CACHE_BUST=$(date +%s) -t openclaw:latest .
 ```
 
 ### Run with code-server
