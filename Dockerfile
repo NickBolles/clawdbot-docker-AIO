@@ -73,6 +73,9 @@ ARG OPENCLAW_VERSION=latest
 ARG CACHE_BUST=0
 RUN echo "cache-bust: ${CACHE_BUST}" && npm install -g openclaw@${OPENCLAW_VERSION}
 
+# Install DAVE protocol support for Discord voice
+RUN cd /usr/lib/node_modules/openclaw && npm install @snazzah/davey
+
 # Alias clawdbot -> openclaw for backwards compatibility
 RUN ln -s "$(which openclaw)" /usr/local/bin/clawdbot
 
