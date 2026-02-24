@@ -68,8 +68,10 @@ ENV CHROME_BIN=/usr/bin/google-chrome-stable
 ENV CHROME_PATH=/usr/bin/google-chrome-stable
 
 # Install OpenClaw globally via npm
+# Pass --build-arg CACHE_BUST=$(date +%s) to force a fresh install
 ARG OPENCLAW_VERSION=latest
-RUN npm install -g openclaw@${OPENCLAW_VERSION}
+ARG CACHE_BUST=0
+RUN echo "cache-bust: ${CACHE_BUST}" && npm install -g openclaw@${OPENCLAW_VERSION}
 
 # Alias clawdbot -> openclaw for backwards compatibility
 RUN ln -s "$(which openclaw)" /usr/local/bin/clawdbot
