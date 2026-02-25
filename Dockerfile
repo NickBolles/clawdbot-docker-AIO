@@ -18,6 +18,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     wget \
     unzip \
+    # Build tools (make, gcc, g++ etc. — needed for native modules)
+    build-essential \
+    python3 \
+    python3-pip \
     # Chrome dependencies
     libnss3 \
     libnspr4 \
@@ -63,6 +67,9 @@ RUN wget -q -O /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com
     && rm /tmp/google-chrome-stable_current_amd64.deb \
     && rm -rf /var/lib/apt/lists/*
 
+# Playwright browsers (Chromium + Firefox + WebKit)
+RUN npx playwright install --with-deps chromium firefox webkit
+
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 ENV CHROME_BIN=/usr/bin/google-chrome-stable
 ENV CHROME_PATH=/usr/bin/google-chrome-stable
@@ -104,7 +111,8 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Verify
-RUN gh --version && node -v && npm -v && openclaw --help && google-chrome-stable --version
+RUN gh --version && node -v && npm -v && openclaw --help && google-chrome-stable --version \
+    && make --version && python3 --version && npx playwright --version
 
 # Ports: 18789=OpenClaw Dashboard, 18790=WebChat, 8443=code-server
 EXPOSE 18789 18790 8443
