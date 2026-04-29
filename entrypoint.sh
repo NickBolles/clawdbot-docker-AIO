@@ -92,7 +92,7 @@ wait_for_gateway() {
 trigger_wake() {
     sleep "$WAKE_DELAY"
     echo "[entrypoint] Triggering wake..."
-    openclaw wake --text "$WAKE_TEXT" --mode now --timeout 30000 || echo "[entrypoint] Wake failed (non-fatal)"
+    openclaw system event --text "$WAKE_TEXT" --mode now --timeout 30000 || echo "[entrypoint] Wake failed (non-fatal)"
 }
 
 # Background: wait for gateway then wake
