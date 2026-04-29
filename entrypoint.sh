@@ -45,7 +45,7 @@ fi
 
 # Start OpenClaw gateway
 echo "[entrypoint] Starting OpenClaw gateway..."
-openclaw gateway 2>&1 | sed 's/^/[gateway] /' &
+openclaw gateway --verbose 2>&1 | sed 's/^/[gateway] /' &
 GATEWAY_PID=$!
 
 # Signal handler
