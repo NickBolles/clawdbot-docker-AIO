@@ -25,6 +25,12 @@ OpenClaw (formerly Clawdbot) is an AI agent platform that connects Claude (and o
 docker pull ghcr.io/YOUR_USERNAME/clawdbot-docker:latest
 ```
 
+Builds also publish an image tag for the resolved OpenClaw npm version, for example:
+
+```bash
+docker pull ghcr.io/YOUR_USERNAME/clawdbot-docker:2026.4.26
+```
+
 ### Option 2: Build Locally
 
 ```bash

@@ -82,7 +82,7 @@ ENV CHROME_PATH=/usr/bin/google-chrome-stable
 
 # Install OpenClaw globally via npm
 # Pass --build-arg CACHE_BUST=$(date +%s) to force a fresh install
-ARG OPENCLAW_VERSION=latest
+ARG OPENCLAW_VERSION=2026.4.26
 ARG CACHE_BUST=0
 RUN echo "cache-bust: ${CACHE_BUST}" && npm install -g openclaw@${OPENCLAW_VERSION}
 
