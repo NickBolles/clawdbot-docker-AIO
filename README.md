@@ -301,6 +301,29 @@ Example:
 }
 ```
 
+### `doctor --fix` fails with `npm error ENOTEMPTY ... brave-plugin`
+
+This usually means stale npm rename/temp directories exist under the OpenClaw plugin install path.
+
+This image now cleans common stale temp dirs on startup. For an existing broken volume, run:
+
+```bash
+docker exec -it openclaw-gateway /bin/bash -lc '
+  rm -rf /home/coder/.openclaw/npm/_locks /home/coder/.openclaw/npm/_tmp
+  find /home/coder/.openclaw/npm/node_modules/@openclaw -maxdepth 1 -type d -name ".*-*" -exec rm -rf {} +
+'
+docker exec -it openclaw-gateway openclaw doctor --fix
+```
+
+If it still fails, remove and reinstall only the affected plugin:
+
+```bash
+docker exec -it openclaw-gateway /bin/bash -lc '
+  rm -rf /home/coder/.openclaw/npm/node_modules/@openclaw/brave-plugin
+  npm --prefix /home/coder/.openclaw/npm install @openclaw/brave-plugin
+'
+```
+
 ### code-server Logs
 ```bash
 docker exec openclaw-gateway cat /tmp/code-server.log
