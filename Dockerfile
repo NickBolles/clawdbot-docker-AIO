@@ -86,6 +86,9 @@ ARG OPENCLAW_VERSION=2026.4.26
 ARG CACHE_BUST=0
 RUN echo "cache-bust: ${CACHE_BUST}" && npm install -g openclaw@${OPENCLAW_VERSION}
 
+# Codex CLI (install after OpenClaw so codex stays current and independent)
+RUN npm install -g @openai/codex
+
 # Install DAVE protocol support for Discord voice
 RUN cd /usr/lib/node_modules/openclaw && npm install @snazzah/davey
 
@@ -117,7 +120,7 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Verify
-RUN gh --version && node -v && npm -v && openclaw --help && google-chrome-stable --version \
+RUN gh --version && node -v && npm -v && openclaw --help && codex --help && google-chrome-stable --version \
     && make --version && python3 --version && npx playwright --version
 
 # Ports: 18789=OpenClaw Dashboard, 18790=WebChat, 8443=code-server
