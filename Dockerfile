@@ -96,34 +96,35 @@ RUN cd /usr/lib/node_modules/openclaw && npm install @snazzah/davey
 RUN ln -s "$(which openclaw)" /usr/local/bin/clawdbot
 
 # Shell completions for interactive container shells (best-effort)
-RUN mkdir -p /etc/profile.d && bash -lc 'cat > /etc/profile.d/openclaw-completions.sh <<"SH"
-#!/usr/bin/env bash
-# Load completions lazily and silently for OpenClaw/Codex CLIs.
-# Supports common completion command patterns used by modern CLIs.
-_load_completion_for() {
-  local cmd="$1"
-  [ -x "$(command -v "$cmd" 2>/dev/null)" ] || return 0
-
-  # Prefer dedicated completion subcommands when available.
-  if "$cmd" completion bash >/dev/null 2>&1; then
-    source <("$cmd" completion bash 2>/dev/null) || true
-    return 0
-  fi
-
-  # Fallback pattern used by some Node CLIs.
-  if "$cmd" --generate-completion bash >/dev/null 2>&1; then
-    source <("$cmd" --generate-completion bash 2>/dev/null) || true
-    return 0
-  fi
-
-  return 0
-}
-
-_load_completion_for openclaw
-_load_completion_for clawdbot
-_load_completion_for codex
-unset -f _load_completion_for
-SH'
+RUN mkdir -p /etc/profile.d \
+    && printf '%s\n' \
+      '#!/usr/bin/env bash' \
+      '# Load completions lazily and silently for OpenClaw/Codex CLIs.' \
+      '# Supports common completion command patterns used by modern CLIs.' \
+      '_load_completion_for() {' \
+      '  local cmd="$1"' \
+      '  [ -x "$(command -v "$cmd" 2>/dev/null)" ] || return 0' \
+      '' \
+      '  # Prefer dedicated completion subcommands when available.' \
+      '  if "$cmd" completion bash >/dev/null 2>&1; then' \
+      '    source <("$cmd" completion bash 2>/dev/null) || true' \
+      '    return 0' \
+      '  fi' \
+      '' \
+      '  # Fallback pattern used by some Node CLIs.' \
+      '  if "$cmd" --generate-completion bash >/dev/null 2>&1; then' \
+      '    source <("$cmd" --generate-completion bash 2>/dev/null) || true' \
+      '    return 0' \
+      '  fi' \
+      '' \
+      '  return 0' \
+      '}' \
+      '' \
+      '_load_completion_for openclaw' \
+      '_load_completion_for clawdbot' \
+      '_load_completion_for codex' \
+      'unset -f _load_completion_for' \
+    > /etc/profile.d/openclaw-completions.sh
 
 # Additional apt packages (optional)
 ARG OPENCLAW_DOCKER_APT_PACKAGES=""
