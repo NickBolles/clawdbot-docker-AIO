@@ -251,11 +251,133 @@ docker exec -it openclaw-gateway openclaw channels add --channel discord --token
 docker exec openclaw-gateway openclaw health
 ```
 
+## Shell Completions
+
+Interactive bash shells in the container now auto-load best-effort completions for:
+- `openclaw`
+- `clawdbot`
+- `codex`
+
+Start a fresh shell session to load them:
+
+```bash
+docker exec -it openclaw-gateway /bin/bash -l
+```
+
+If a CLI version does not expose a completion subcommand, this is skipped safely.
+
+## Memory Store (OpenClaw)
+
+Yes — you can enable memory through config, but a memory plugin must also be installed and registered. The message:
+
+`No active memory plugin is registered for the current config.`
+
+means no memory backend is currently active.
+
+Typical recovery flow:
+
+```bash
+# 1) Install or repair configured plugins
+docker exec -it openclaw-gateway openclaw doctor --fix
+
+# 2) Inspect currently effective plugins/config
+docker exec -it openclaw-gateway openclaw config get
+```
+
+In your `~/.openclaw/openclaw.json`, ensure:
+1. A memory plugin package is listed under plugins.
+2. The memory section points to that plugin/backend and is enabled.
+
+Example shape (field names can vary by plugin):
+
+```json
+{
+  "plugins": {
+    "memory": {
+      "package": "@openclaw/<memory-plugin>",
+      "enabled": true
+    }
+  },
+  "memory": {
+    "enabled": true,
+    "provider": "memory"
+  }
+}
+```
+
+After editing config, restart the container and check logs for memory plugin registration.
+
 ## Troubleshooting
 
 ### View Logs
 ```bash
 docker logs -f openclaw-gateway
+```
+
+### `Error: spawn codex EACCES`
+
+If agent runs fail with `spawn codex EACCES`, it means the embedded harness could not execute the `codex` binary.
+
+This image now installs the Codex CLI by default. Rebuild and redeploy your container:
+
+```bash
+docker build --build-arg CACHE_BUST=$(date +%s) -t openclaw:latest .
+docker rm -f openclaw-gateway
+docker run -d --name openclaw-gateway ... openclaw:latest
+```
+
+Then verify inside the container:
+
+```bash
+docker exec openclaw-gateway which codex
+docker exec openclaw-gateway codex --help
+```
+
+If you mount custom binaries/scripts into `/home/coder/clawd`, ensure that volume is not mounted with `noexec`.
+
+### `session lock cleanup failed ... EACCES`
+
+If you see permission errors for `/home/coder/.openclaw/agents/agents/sessions`, fix ownership on the host volume so UID/GID match the `coder` user in-container:
+
+```bash
+sudo chown -R 1000:1000 /path/to/your/openclaw-config
+```
+
+### `Proxy headers detected from untrusted address`
+
+When using a reverse proxy, add your proxy subnet(s) to `gateway.trustedProxies` in `~/.openclaw/openclaw.json`.
+
+Example:
+
+```json
+{
+  "gateway": {
+    "trustedProxies": ["172.17.0.0/16", "192.168.0.0/16"]
+  }
+}
+```
+
+### `doctor --fix` fails with `npm error ENOTEMPTY ... brave-plugin`
+
+This usually means stale npm rename/temp directories exist under the OpenClaw plugin install path.
+
+This image now cleans common stale temp dirs on startup. For an existing broken volume, run:
+
+```bash
+docker exec -it openclaw-gateway /bin/bash -lc '
+  rm -rf /home/coder/.openclaw/npm/_locks /home/coder/.openclaw/npm/_tmp
+  find /home/coder/.openclaw/npm/node_modules/@openclaw -maxdepth 1 -type d -name ".*-*" -exec rm -rf {} +
+'
+docker exec -it openclaw-gateway openclaw doctor --fix
+```
+
+If it still fails, remove and reinstall only the affected plugin:
+
+```bash
+docker exec -it openclaw-gateway /bin/bash -lc '
+  rm -rf /home/coder/.openclaw/npm/node_modules/@openclaw/brave-plugin
+  npm --prefix /home/coder/.openclaw/npm install @openclaw/brave-plugin
+'
 ```
 
 ### code-server Logs

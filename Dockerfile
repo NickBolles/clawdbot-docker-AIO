@@ -86,11 +86,44 @@ ARG OPENCLAW_VERSION=2026.4.26
 ARG CACHE_BUST=0
 RUN echo "cache-bust: ${CACHE_BUST}" && npm install -g openclaw@${OPENCLAW_VERSION}
 
+# Codex CLI (install after OpenClaw so codex stays current and independent)
+RUN npm install -g @openai/codex
+
 # Install DAVE protocol support for Discord voice
 RUN cd /usr/lib/node_modules/openclaw && npm install @snazzah/davey
 
 # Alias clawdbot -> openclaw for backwards compatibility
 RUN ln -s "$(which openclaw)" /usr/local/bin/clawdbot
+
+# Shell completions for interactive container shells (best-effort)
+RUN mkdir -p /etc/profile.d && bash -lc 'cat > /etc/profile.d/openclaw-completions.sh <<"SH"
+#!/usr/bin/env bash
+# Load completions lazily and silently for OpenClaw/Codex CLIs.
+# Supports common completion command patterns used by modern CLIs.
+_load_completion_for() {
+  local cmd="$1"
+  [ -x "$(command -v "$cmd" 2>/dev/null)" ] || return 0
+
+  # Prefer dedicated completion subcommands when available.
+  if "$cmd" completion bash >/dev/null 2>&1; then
+    source <("$cmd" completion bash 2>/dev/null) || true
+    return 0
+  fi
+
+  # Fallback pattern used by some Node CLIs.
+  if "$cmd" --generate-completion bash >/dev/null 2>&1; then
+    source <("$cmd" --generate-completion bash 2>/dev/null) || true
+    return 0
+  fi
+
+  return 0
+}
+
+_load_completion_for openclaw
+_load_completion_for clawdbot
+_load_completion_for codex
+unset -f _load_completion_for
+SH'
 
 # Additional apt packages (optional)
 ARG OPENCLAW_DOCKER_APT_PACKAGES=""
@@ -117,7 +150,7 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Verify
-RUN gh --version && node -v && npm -v && openclaw --help && google-chrome-stable --version \
+RUN gh --version && node -v && npm -v && openclaw --help && codex --help && google-chrome-stable --version \
     && make --version && python3 --version && npx playwright --version
 
 # Ports: 18789=OpenClaw Dashboard, 18790=WebChat, 8443=code-server
