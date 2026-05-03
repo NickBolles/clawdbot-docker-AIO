@@ -251,6 +251,62 @@ docker exec -it openclaw-gateway openclaw channels add --channel discord --token
 docker exec openclaw-gateway openclaw health
 ```
 
+## Shell Completions
+
+Interactive bash shells in the container now auto-load best-effort completions for:
+- `openclaw`
+- `clawdbot`
+- `codex`
+
+Start a fresh shell session to load them:
+
+```bash
+docker exec -it openclaw-gateway /bin/bash -l
+```
+
+If a CLI version does not expose a completion subcommand, this is skipped safely.
+
+## Memory Store (OpenClaw)
+
+Yes — you can enable memory through config, but a memory plugin must also be installed and registered. The message:
+
+`No active memory plugin is registered for the current config.`
+
+means no memory backend is currently active.
+
+Typical recovery flow:
+
+```bash
+# 1) Install or repair configured plugins
+docker exec -it openclaw-gateway openclaw doctor --fix
+
+# 2) Inspect currently effective plugins/config
+docker exec -it openclaw-gateway openclaw config get
+```
+
+In your `~/.openclaw/openclaw.json`, ensure:
+1. A memory plugin package is listed under plugins.
+2. The memory section points to that plugin/backend and is enabled.
+
+Example shape (field names can vary by plugin):
+
+```json
+{
+  "plugins": {
+    "memory": {
+      "package": "@openclaw/<memory-plugin>",
+      "enabled": true
+    }
+  },
+  "memory": {
+    "enabled": true,
+    "provider": "memory"
+  }
+}
+```
+
+After editing config, restart the container and check logs for memory plugin registration.
+
 ## Troubleshooting
 
 ### View Logs
