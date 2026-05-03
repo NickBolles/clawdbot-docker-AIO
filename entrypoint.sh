@@ -12,9 +12,30 @@ CODE_SERVER_ENABLED="${CODE_SERVER_ENABLED:-true}"
 CODE_SERVER_PORT="${CODE_SERVER_PORT:-8443}"
 OPENCLAW_WORKSPACE="${OPENCLAW_WORKSPACE:-/home/coder/clawd}"
 
+# Ensure runtime paths exist and are writable by the non-root runtime user
+mkdir -p /home/coder/.openclaw/agents/agents/sessions "$OPENCLAW_WORKSPACE"
+chmod -R u+rwX /home/coder/.openclaw "$OPENCLAW_WORKSPACE" 2>/dev/null || true
+
+# Surface early harness issues before gateway starts accepting traffic
+if ! command -v codex >/dev/null 2>&1; then
+  echo "[entrypoint] WARNING: codex CLI not found in PATH; embedded harness runs may fail"
+elif [ ! -x "$(command -v codex)" ]; then
+  echo "[entrypoint] WARNING: codex CLI is present but not executable: $(command -v codex)"
+fi
+
 # Clean up stale lock files
 echo "[entrypoint] Cleaning up stale lock files..."
 find /home/coder/.openclaw -name "*.lock" -type f -delete 2>/dev/null || true
+
+# Clean up stale npm staging/rename directories that can break `openclaw doctor --fix`
+OPENCLAW_NPM_DIR="/home/coder/.openclaw/npm"
+if [ -d "$OPENCLAW_NPM_DIR/node_modules/@openclaw" ]; then
+  echo "[entrypoint] Cleaning stale OpenClaw plugin temp dirs..."
+  find "$OPENCLAW_NPM_DIR/node_modules/@openclaw" -maxdepth 1 -type d -name ".*-*" -exec rm -rf {} + 2>/dev/null || true
+fi
+
+# Clean npm temporary state that can cause ENOTEMPTY rename conflicts
+rm -rf "$OPENCLAW_NPM_DIR/_locks" "$OPENCLAW_NPM_DIR/_tmp" 2>/dev/null || true
 
 # Chrome leaves SingletonLock (and siblings) in user-data; *.lock doesn't match
 CHROME_UD="/home/coder/.openclaw/browser/clawd/user-data"
