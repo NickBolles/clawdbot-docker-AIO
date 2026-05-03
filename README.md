@@ -258,6 +258,49 @@ docker exec openclaw-gateway openclaw health
 docker logs -f openclaw-gateway
 ```
 
+### `Error: spawn codex EACCES`
+
+If agent runs fail with `spawn codex EACCES`, it means the embedded harness could not execute the `codex` binary.
+
+This image now installs the Codex CLI by default. Rebuild and redeploy your container:
+
+```bash
+docker build --build-arg CACHE_BUST=$(date +%s) -t openclaw:latest .
+docker rm -f openclaw-gateway
+docker run -d --name openclaw-gateway ... openclaw:latest
+```
+
+Then verify inside the container:
+
+```bash
+docker exec openclaw-gateway which codex
+docker exec openclaw-gateway codex --help
+```
+
+If you mount custom binaries/scripts into `/home/coder/clawd`, ensure that volume is not mounted with `noexec`.
+
+### `session lock cleanup failed ... EACCES`
+
+If you see permission errors for `/home/coder/.openclaw/agents/agents/sessions`, fix ownership on the host volume so UID/GID match the `coder` user in-container:
+
+```bash
+sudo chown -R 1000:1000 /path/to/your/openclaw-config
+```
+
+### `Proxy headers detected from untrusted address`
+
+When using a reverse proxy, add your proxy subnet(s) to `gateway.trustedProxies` in `~/.openclaw/openclaw.json`.
+
+Example:
+
+```json
+{
+  "gateway": {
+    "trustedProxies": ["172.17.0.0/16", "192.168.0.0/16"]
+  }
+}
+```
+
 ### code-server Logs
 ```bash
 docker exec openclaw-gateway cat /tmp/code-server.log
